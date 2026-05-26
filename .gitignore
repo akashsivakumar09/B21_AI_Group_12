@@ -1,0 +1,12 @@
+# Ignore main folder
+src/main/
+
+# Ignore IntelliJ settings
+.idea/
+*.iml
+
+# Ignore compiled code
+target/
+
+# Ignore Maven wrapper
+.mvn/
