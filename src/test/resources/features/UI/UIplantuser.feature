@@ -1,8 +1,8 @@
-Feature: Plant Management UI
+Feature: Plant Management UI for User
 
   Background:
     Given the user has logged in
-    And the user navigates to the Plant page
+    And he navigates to the Plant page
 
   @UI-PLANTS-U-01 @user @search @plant
   Scenario: Verify User can search plant by using name
@@ -19,6 +19,14 @@ Feature: Plant Management UI
     And clicks the Search button
     Then all displayed plants should belong to category "Best"
 
+  @UI-PLANTS-U-03 @user @plant @sort
+  Scenario: Verify Name column sorting toggles between ascending and descending
+    Given more than one plant records exist in the system
+    When the user clicks on the Name column header
+    Then the Plant list should be sorted in "descending" alphabetical order by Name
+    When the user clicks on the Name column header
+    Then the Plant list should be sorted in "ascending" alphabetical order by Name
+
   @UI-PLANTS-U-04 @user @stock @plant
   Scenario: Verify Display Low badge when quantity is below 5
     Given at least one plant record exists with a stock quantity below 5
@@ -28,3 +36,5 @@ Feature: Plant Management UI
   Scenario: Verify display No plants found message when no plants exist
     Given no plant records exist in the system
     Then the Plant list should display a "No plants found" message
+
+
