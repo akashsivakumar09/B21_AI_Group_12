@@ -17,7 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import io.cucumber.java.en.Given;
 
-public class PlantsSteps {
+public class UIPlantsSteps {
 
     PlantsPage plantsPage = new PlantsPage(Hooks.page);
     String searchKeyword;
