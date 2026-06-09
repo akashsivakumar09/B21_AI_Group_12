@@ -83,4 +83,46 @@ public class PlantApiClient {
     public void setAuthToken(String token) {
         this.authToken = token;
     }
+
+    public void clearAuthToken() {
+        this.authToken = null;
+    }
+
+    /**
+     * Executes a GET request to a specific endpoint WITHOUT the Authorization header.
+     */
+    public Response getWithoutAuth(String endpoint) {
+        return given()
+                .baseUri(baseUrl)
+                .header("Content-Type", "application/json")
+                // Notice: No Authorization header is attached here
+                .when()
+                .get(endpoint);
+    }
+
+    /**
+     * Fetches a list of plants associated with a specific category ID.
+     */
+    public Response getPlantsByCategoryId(int categoryId) {
+        return getAuthorizedRequest()
+                .pathParam("categoryId", categoryId)
+                .when()
+                .get("/api/plants/category/{categoryId}");
+    }
+
+    public Response createPlant(int categoryId, String requestBody) {
+        return getAuthorizedRequest()
+                .pathParam("categoryId", categoryId)
+                .body(requestBody)
+                .when()
+                .post("/api/plants/category/{categoryId}");
+    }
+    /**
+     * Fetches the plant summary information (e.g., total counts, low stock).
+     */
+    public Response getPlantSummary() {
+        return getAuthorizedRequest()
+                .when()
+                .get("/api/plants/summary");
+    }
 }
