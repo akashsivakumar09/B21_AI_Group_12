@@ -55,4 +55,94 @@ public class APIPlantsSteps {
                 .body("$", hasKey(field2))
                 .body("$", hasKey(field3));
     }
+
+    @Given("authorization information is not given in the header")
+    public void authorizationInformationIsNotGivenInTheHeader() {
+        // Ensure the client has no token stored
+        plantClient.clearAuthToken();
+    }
+
+    @When("the user executes a GET request to {string} without authorization")
+    public void theUserExecutesAGetRequestWithoutAuthorization(String endpoint) {
+        // Use the new client method that explicitly omits the Auth header
+        latestResponse = plantClient.getWithoutAuth(endpoint);
+    }
+
+    @Then("the response body should contain a {string} error message")
+    public void theResponseBodyShouldContainAnErrorMessage(String expectedError) {
+        // Validates that the expected error text (e.g., "UNAUTHORIZED") appears somewhere in the response body.
+        // This is a safe assertion if you don't know the exact JSON schema of the error payload.
+        //latestResponse.then().body(org.hamcrest.Matchers.containsString(expectedError));
+
+        /* Note: If your API returns a specific JSON format for errors like {"error": "UNAUTHORIZED"},
+           you can make this more strict by using:
+        */
+        latestResponse.then().body("error", equalTo(expectedError));
+    }
+
+    private int targetCategoryId;
+
+    @Given("a valid category ID exists in the system")
+    public void aValidCategoryIdExistsInTheSystem() {
+        // For testing purposes, we define a known valid category ID.
+        // In a real framework, you might query the DB or call a GET /api/categories endpoint to fetch one dynamically.
+        targetCategoryId = 2;
+    }
+
+    @When("the user executes a GET request to {string} using the valid category ID")
+    public void theUserExecutesAGetRequestUsingTheValidCategoryId(String endpoint) {
+        // Using our API Client to abstract the HTTP call
+        latestResponse = plantClient.getPlantsByCategoryId(targetCategoryId);
+    }
+
+    @Then("the response body should contain a list of plants with {string}, {string}, {string}, and {string}")
+    public void theResponseBodyShouldContainAListOfPlantsWithFields(String field1, String field2, String field3, String field4) {
+        // Assert that the response is an array (list) and check the structure of the first item in the list
+        // Note: Using "[0]" assumes the category has at least one plant.
+        latestResponse.then()
+                .body("size()", greaterThan(0)) // Ensure the list is not empty
+                .body("[0]", hasKey(field1))
+                .body("[0]", hasKey(field2))
+                .body("[0]", hasKey(field3))
+                .body("[0]", hasKey(field4));
+    }
+
+    private String plantRequestBody;
+
+    @Given("a valid plant request body is prepared")
+    public void aValidPlantRequestBodyIsPrepared() {
+        // Construct a valid JSON payload for creating a plant.
+        // *Note: Adjust these fields if your API requires different properties (e.g., description, image URL).*
+        plantRequestBody = "{\n" +
+                "  \"name\": \"Fern\",\n" +
+                "  \"price\": 19.99,\n" +
+                "  \"quantity\": 5\n" +
+                "}";
+    }
+
+    @When("the user executes a POST request to {string} to create a plant")
+    public void theUserExecutesAPOSTRequestToCreateAPlant(String endpoint) {
+        // We pass the dynamically retrieved category ID (from U-03) and the payload to the client
+        latestResponse = plantClient.createPlant(targetCategoryId, plantRequestBody);
+    }
+
+    @When("the user executes a GET request to {string} to retrieve all plants")
+    public void theUserExecutesAGetRequestToRetrieveAllPlants(String endpoint) {
+        // We already created this method in our PlantApiClient earlier!
+        latestResponse = plantClient.getAllPlants();
+    }
+
+    @When("the user executes a GET request to {string} to retrieve the plant summary")
+    public void theUserExecutesAGetRequestToRetrieveThePlantSummary(String endpoint) {
+        // Execute the GET request using our client method
+        latestResponse = plantClient.getPlantSummary();
+    }
+
+    @Then("the response body should contain the summary fields {string} and {string}")
+    public void theResponseBodyShouldContainTheSummaryFields(String field1, String field2) {
+        // Validate that the JSON root object contains the expected summary keys
+        latestResponse.then()
+                .body("$", org.hamcrest.Matchers.hasKey(field1))
+                .body("$", org.hamcrest.Matchers.hasKey(field2));
+    }
 }
