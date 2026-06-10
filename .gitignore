@@ -10,3 +10,7 @@ target/
 
 # Ignore Maven wrapper
 .mvn/
+
+
+allure-results
+
