@@ -1,4 +1,5 @@
-package client;
+package api.clients;
+
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -144,3 +145,4 @@ public class PlantApiClient {
                 .delete("/api/plants/{id}");
     }
 }
+
