@@ -125,4 +125,22 @@ public class PlantApiClient {
                 .when()
                 .get("/api/plants/summary");
     }
+
+    public Response updatePlant(int id, String requestBody) {
+        return getAuthorizedRequest()
+                .pathParam("id", id)
+                .body(requestBody)
+                .when()
+                .put("/api/plants/{id}");
+    }
+
+    /**
+     * Deletes a specific plant from the system by its ID.
+     */
+    public Response deletePlant(int id) {
+        return getAuthorizedRequest()
+                .pathParam("id", id)
+                .when()
+                .delete("/api/plants/{id}");
+    }
 }

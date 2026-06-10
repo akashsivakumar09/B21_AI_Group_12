@@ -1,4 +1,4 @@
-Feature: Plant Management API
+Feature: Plant Management API for Users
 
   Background:
     Given the user has logged in with valid credentials
