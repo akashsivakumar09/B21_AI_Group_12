@@ -21,7 +21,15 @@ public class APIPlantsSteps {
         latestResponse.then().statusCode(200);
     }
 
+    @Given("the admin has logged in with valid credentials")
+    public void adminHasLoggedInWithValidCredentials() {
+        // Authenticate as Admin and store the token
+        latestResponse = plantClient.login("admin", "admin123");
+        latestResponse.then().statusCode(200);
+    }
+
     @Given("the user has a valid authorization token")
+    @Given("the admin has a valid authorization token")
     public void userHasAValidAuthorizationToken() {
         // Handled entirely by the client during the login step
         if (plantClient.getAuthToken() == null) {
@@ -177,6 +185,7 @@ public class APIPlantsSteps {
         setupValidCategoryAndPlant();
     }
 
+    @When("the admin executes a GET request to {string} using the valid category ID")
     @When("the user executes a GET request to {string} using the valid category ID")
     public void theUserExecutesAGetRequestUsingTheValidCategoryId(String endpoint) {
         // Using our API Client to abstract the HTTP call
@@ -232,5 +241,101 @@ public class APIPlantsSteps {
         latestResponse.then()
                 .body("$", org.hamcrest.Matchers.hasKey(field1))
                 .body("$", org.hamcrest.Matchers.hasKey(field2));
+    }
+
+    private String updatedPlantRequestBody;
+    @Given("a valid updated plant request body is prepared")
+    public void aValidUpdatedPlantRequestBodyIsPrepared() {
+        // Formulate the JSON body exactly as requested in the test case image
+        updatedPlantRequestBody = "{\n" +
+                "  \"name\": \"Tulip\",\n" +
+                "  \"price\": 35,\n" +
+                "  \"quantity\": 20,\n" +
+                "  \"categoryid\": 2\n" +
+                "}";
+    }
+
+    @When("the admin executes a PUT request to {string} to update plant details")
+    public void theAdminExecutesAPutRequestToUpdatePlantDetails(String endpoint) {
+        // Execute the PUT request via the API client
+        latestResponse = plantClient.updatePlant(targetPlantId, updatedPlantRequestBody);
+    }
+
+    @Then("the response body should contain the updated plant details")
+    public void theResponseBodyShouldContainTheUpdatedPlantDetails() {
+        // Verify the response echoes back the updated details we sent in the PUT body
+        latestResponse.then()
+                .body("name", org.hamcrest.Matchers.equalTo("Tulip"))
+                // Note: RestAssured parses JSON decimals as Floats by default
+                .body("price", org.hamcrest.Matchers.equalTo(35.0f))
+                .body("quantity", org.hamcrest.Matchers.equalTo(20))
+                .body("category.id", org.hamcrest.Matchers.equalTo(2));
+    }
+
+    @Given("a valid plant ID exists in the system for deletion")
+    public void aValidPlantIdExistsInTheSystemForDeletion() {
+        // 1. Create a dummy payload
+        String dummyPlant = "{\n" +
+                "  \"name\": \"Test Plant\",\n" +
+                "  \"price\": 10.00,\n" +
+                "  \"quantity\": 1\n" +
+                "}";
+
+        // 2. Create the plant (assuming category ID 2 exists)
+        Response createResponse = plantClient.createPlant(2, dummyPlant);
+        createResponse.then().statusCode(201); // Ensure it was created
+
+        // 3. Save the newly generated ID to targetPlantId
+        // Assuming your POST response returns the created plant object with its new ID
+        targetPlantId = createResponse.jsonPath().getInt("id");
+
+        System.out.println("Created dummy plant for deletion with ID: " + targetPlantId);
+    }
+
+    @When("the admin executes a DELETE request to {string} with the invalid plant ID")
+    @When("the admin executes a DELETE request to {string} with a valid plant ID")
+    public void theAdminExecutesADeleteRequestWithAValidPlantId(String endpoint) {
+        // We assume targetPlantId was populated by the "Given a valid plant ID exists in the system" step
+        latestResponse = plantClient.deletePlant(targetPlantId);
+    }
+
+    private int invalidPlantId;
+    @Given("an invalid plant ID is prepared")
+    public void anInvalidPlantIdIsPrepared() {
+        // Use an ID that is highly unlikely to ever exist in the database
+        invalidPlantId = 999999;
+    }
+
+    private String newPlantRequestBody;
+
+    @Given("a valid new plant request body is prepared")
+    public void aValidNewPlantRequestBodyIsPrepared() {
+        // Formulate the JSON body exactly as requested in the test case image
+        // Make sure the categoryid matches the targetCategoryId you are testing against
+        newPlantRequestBody = "{\n" +
+                "  \"name\": \"Monstera Delicio\",\n" +
+                "  \"price\": 45,\n" +
+                "  \"quantity\": 15,\n" +
+                "  \"categoryid\": 2\n" +
+                "}";
+    }
+
+    @When("the admin executes a POST request to {string} to create a plant")
+    public void theAdminExecutesAPostRequestToCreateAPlant(String endpoint) {
+        // Execute the POST request via the API client using the category ID and payload
+        latestResponse = plantClient.createPlant(targetCategoryId, newPlantRequestBody);
+    }
+
+    @Then("the response body should contain the created plant details")
+    public void theResponseBodyShouldContainTheCreatedPlantDetails() {
+        // Verify the response echoes back the exact details we sent in the POST body
+        latestResponse.then()
+                .body("name", org.hamcrest.Matchers.equalTo("Monstera Delicio"))
+                // Note: RestAssured parses JSON decimals as Floats by default
+                .body("price", org.hamcrest.Matchers.equalTo(45f))
+                .body("quantity", org.hamcrest.Matchers.equalTo(15));
+
+        // Optional: Also assert that the database successfully generated a new ID for it
+        latestResponse.then().body("id", org.hamcrest.Matchers.notNullValue());
     }
 }
