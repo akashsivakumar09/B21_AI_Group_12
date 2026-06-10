@@ -34,7 +34,14 @@ public class APIPlantsSteps {
         // Use the client to get all plants and fetch the first ID
         Response allPlants = plantClient.getAllPlants();
         allPlants.then().statusCode(200);
-        targetPlantId = allPlants.jsonPath().getInt("[0].id");
+        java.util.List<Integer> ids = allPlants.jsonPath().getList("id");
+        if (ids == null || ids.isEmpty()) {
+            setupValidCategoryAndPlant();
+            allPlants = plantClient.getAllPlants();
+            allPlants.then().statusCode(200);
+            ids = allPlants.jsonPath().getList("id");
+        }
+        targetPlantId = ids.get(0);
     }
 
     @When("the user executes a GET request to {string} using the valid plant ID")
@@ -82,11 +89,92 @@ public class APIPlantsSteps {
 
     private int targetCategoryId;
 
+    private void setupValidCategoryAndPlant() {
+        // Log in as admin
+        Response loginRes = io.restassured.RestAssured.given()
+                .baseUri("http://localhost:8080")
+                .contentType(io.restassured.http.ContentType.JSON)
+                .body("{\"username\":\"admin\",\"password\":\"admin123\"}")
+                .post("/api/auth/login");
+        
+        String adminToken = loginRes.jsonPath().getString("token");
+        
+        // Ensure main category "Roses" exists (ID 1)
+        int mainCatId = 1;
+        Response mainCatRes = io.restassured.RestAssured.given()
+                .baseUri("http://localhost:8080")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(io.restassured.http.ContentType.JSON)
+                .body("{\"name\":\"Roses\"}")
+                .post("/api/categories");
+                
+        if (mainCatRes.statusCode() == 201) {
+            mainCatId = mainCatRes.jsonPath().getInt("id");
+        } else {
+            // Find existing "Roses"
+            Response getCats = io.restassured.RestAssured.given()
+                    .baseUri("http://localhost:8080")
+                    .header("Authorization", "Bearer " + adminToken)
+                    .accept(io.restassured.http.ContentType.JSON)
+                    .get("/api/categories");
+            try {
+                mainCatId = getCats.jsonPath().getInt("find { it.name == 'Roses' }.id");
+            } catch (Exception e) {
+                // Fallback to first available category
+                mainCatId = getCats.jsonPath().getInt("[0].id");
+            }
+        }
+        
+        // Create subcategory "SubRoses" under mainCatId
+        Response subCatRes = io.restassured.RestAssured.given()
+                .baseUri("http://localhost:8080")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(io.restassured.http.ContentType.JSON)
+                .body("{\"name\":\"SubRoses\",\"parent\":{\"id\":" + mainCatId + "}}")
+                .post("/api/categories");
+                
+        if (subCatRes.statusCode() == 201) {
+            targetCategoryId = subCatRes.jsonPath().getInt("id");
+        } else {
+            // Find existing "SubRoses"
+            Response getCats = io.restassured.RestAssured.given()
+                    .baseUri("http://localhost:8080")
+                    .header("Authorization", "Bearer " + adminToken)
+                    .accept(io.restassured.http.ContentType.JSON)
+                    .get("/api/categories");
+            try {
+                targetCategoryId = getCats.jsonPath().getInt("find { it.name == 'SubRoses' }.id");
+            } catch (Exception e) {
+                targetCategoryId = mainCatId; // Fallback
+            }
+        }
+        
+        // Check if there are any plants in this subcategory
+        Response plantsInCat = io.restassured.RestAssured.given()
+                .baseUri("http://localhost:8080")
+                .header("Authorization", "Bearer " + adminToken)
+                .get("/api/plants/category/" + targetCategoryId);
+                
+        if (plantsInCat.statusCode() != 200 || plantsInCat.jsonPath().getList("id").isEmpty()) {
+            // Create a plant in this subcategory
+            String plantBody = "{\n" +
+                    "  \"name\": \"Red Rose\",\n" +
+                    "  \"price\": 10.99,\n" +
+                    "  \"quantity\": 50\n" +
+                    "}";
+            
+            io.restassured.RestAssured.given()
+                    .baseUri("http://localhost:8080")
+                    .header("Authorization", "Bearer " + adminToken)
+                    .contentType(io.restassured.http.ContentType.JSON)
+                    .body(plantBody)
+                    .post("/api/plants/category/" + targetCategoryId);
+        }
+    }
+
     @Given("a valid category ID exists in the system")
     public void aValidCategoryIdExistsInTheSystem() {
-        // For testing purposes, we define a known valid category ID.
-        // In a real framework, you might query the DB or call a GET /api/categories endpoint to fetch one dynamically.
-        targetCategoryId = 2;
+        setupValidCategoryAndPlant();
     }
 
     @When("the user executes a GET request to {string} using the valid category ID")
