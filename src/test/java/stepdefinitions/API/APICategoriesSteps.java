@@ -36,6 +36,7 @@ public class APICategoriesSteps {
         HttpResponse<String> loginResponse = client.send(loginRequest, HttpResponse.BodyHandlers.ofString());
         Assert.assertEquals(loginResponse.statusCode(), 200, "API Login failed!");
 
+        // Extract JWT token from JSON response body to authorize subsequent requests
         JSONObject body = new JSONObject(loginResponse.body());
         token = body.getString("token");
     }
