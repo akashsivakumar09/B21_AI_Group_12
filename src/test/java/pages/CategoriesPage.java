@@ -5,6 +5,10 @@ import com.microsoft.playwright.Locator;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * Page Object Model representing the Categories management page.
+ * Utilizes Microsoft Playwright for UI interactions.
+ */
 public class CategoriesPage {
     private Page page;
 
@@ -30,14 +34,23 @@ public class CategoriesPage {
         this.nameError = page.locator("input[name='name'] ~ .invalid-feedback, .error-message");
     }
 
+    /**
+     * Navigates to the main categories list page.
+     */
     public void navigateToCategories() {
         page.navigate("http://localhost:8080/ui/categories");
     }
 
+    /**
+     * Checks if the 'Add A Category' button is currently visible.
+     */
     public boolean isAddCategoryButtonVisible() {
         return addCategoryButton.isVisible();
     }
 
+    /**
+     * Clicks the 'Add A Category' button.
+     */
     public void clickAddCategoryButton() {
         addCategoryButton.click();
     }

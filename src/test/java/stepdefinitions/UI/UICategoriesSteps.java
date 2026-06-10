@@ -45,6 +45,7 @@ public class UICategoriesSteps {
 
     @Then("the Add Category page should be displayed")
     public void the_add_category_page_should_be_displayed() {
+        // Wait for URL matching the wildcard pattern representing the add category page
         Hooks.page.waitForURL("**/ui/categories/add");
         Assert.assertTrue(Hooks.page.url().contains("/ui/categories/add"), "Not on Add Category page!");
     }
