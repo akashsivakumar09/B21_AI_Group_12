@@ -1,11 +1,10 @@
 package stepdefinitions.API;
-import client.PlantApiClient;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import io.restassured.response.Response;
 import static org.hamcrest.Matchers.*;
-import client.PlantApiClient;
+import api.clients.PlantApiClient;
 
 public class APIPlantsSteps {
 
