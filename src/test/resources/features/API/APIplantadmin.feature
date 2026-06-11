@@ -39,3 +39,8 @@ Feature: Plant Management API for Admin
          Then the HTTP status code should be 201
          And the response body should contain the created plant details
 
+     @API-PLANTS-A-06 @api @plant @admin @get @negative
+       Scenario: Verify GET plants by category with non-existent category ID
+         Given a non-existent category ID is prepared
+         When the admin executes a GET request to "/api/plants/category/{categoryId}" using the non-existent category ID
+         Then the HTTP status code should be 404
