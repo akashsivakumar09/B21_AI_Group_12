@@ -3,7 +3,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import io.cucumber.java.en.*;
+import org.testng.Assert;
 import pages.AddPlantPage;
+import pages.EditPlantPage;
 import pages.PlantsPage;
 import stepdefinitions.Hooks;
 import com.microsoft.playwright.Locator;
@@ -12,7 +14,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import org.testng.Assert;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import io.cucumber.java.en.Given;
@@ -287,6 +289,34 @@ public class UIPlantsSteps {
 
         Assert.assertFalse(isFound,
                 "Deletion Failed: Expected plant '" + plantName + "' to be removed, but it was still found in the table.");
+    }
+
+    // Add this near the top with your other page initializations
+    EditPlantPage editPlantPage = new EditPlantPage(Hooks.page);
+
+    // ... existing code ...
+
+    @When("the user clicks the Edit button for plant {string}")
+    public void the_user_clicks_the_edit_button_for_plant(String plantName) {
+        plantsPage.clickEditButtonForPlant(plantName);
+    }
+
+    @When("updates the Category to {string}")
+    public void updates_the_category_to(String newCategory) {
+        editPlantPage.selectCategory(newCategory);
+    }
+
+    @When("clicks the Save button on the Edit Plant form")
+    public void clicks_the_save_button_on_the_edit_plant_form() {
+        editPlantPage.clickSave();
+    }
+
+    @Then("the Plant table should display {string} with the category {string}")
+    public void the_plant_table_should_display_with_the_category(String plantName, String expectedCategory) {
+        String actualCategory = plantsPage.getCategoryForPlant(plantName);
+
+        Assert.assertEquals(actualCategory, expectedCategory,
+                "Update Failed: The category for plant '" + plantName + "' did not match the expected updated value.");
     }
 
 
