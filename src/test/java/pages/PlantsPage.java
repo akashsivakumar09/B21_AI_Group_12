@@ -207,4 +207,25 @@ public class PlantsPage {
         return matchingRow.count() > 0;
     }
 
+    /**
+     * Clicks the Edit button (pencil icon) for a specific plant row
+     */
+    public void clickEditButtonForPlant(String plantName) {
+        Locator targetRow = this.tableRows.filter(new Locator.FilterOptions().setHasText(plantName));
+        // Uses the title="Edit" attribute visible in the DOM screenshot
+        Locator editButton = targetRow.locator("a[title='Edit']");
+        editButton.click();
+    }
+
+    /**
+     * Retrieves the category text for a specific plant by its name
+     */
+    public String getCategoryForPlant(String plantName) {
+        // Wait for table to reload/stabilize after the redirect
+        page.waitForLoadState();
+        Locator targetRow = this.tableRows.filter(new Locator.FilterOptions().setHasText(plantName));
+        // Category is the 2nd column based on your previous 'getAllDisplayedCategories(2)' implementation
+        return targetRow.locator("td:nth-child(2)").innerText().trim();
+    }
+
 }
