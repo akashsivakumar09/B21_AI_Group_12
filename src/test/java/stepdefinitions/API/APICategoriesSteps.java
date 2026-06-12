@@ -14,6 +14,7 @@ public class APICategoriesSteps {
     private String token;
     private Response response;
     private String generatedCategoryName;
+    private int createdCategoryId;
 
     @Given("the API user has authenticated as {string}")
     public void the_api_user_has_authenticated_as(String role) throws Exception {
@@ -47,6 +48,26 @@ public class APICategoriesSteps {
         response = apiClient.createSubCategory(token, endpoint, name, parentId);
     }
 
+    @When("the API user sends a POST request to {string} with name {string} and nonexistent parent category ID {int}")
+    public void the_api_user_sends_a_post_request_to_with_nonexistent_parent_id(String endpoint, String name, int parentId) throws Exception {
+        response = apiClient.createSubCategory(token, endpoint, name, parentId);
+    }
+
+    @When("the API user sends a POST request to create a sub-category under the created category")
+    public void the_api_user_sends_a_post_request_to_create_sub_category_under_created_category() throws Exception {
+        response = apiClient.createSubCategory(token, "/api/categories", "SubDM", createdCategoryId);
+    }
+
+    @When("the API user sends a PUT request to update the created category name to {string}")
+    public void the_api_user_sends_a_put_request_to_update_created_category_name(String newName) throws Exception {
+        response = apiClient.updateCategory(token, createdCategoryId, newName, null);
+    }
+
+    @When("the API user sends a DELETE request to delete the created category")
+    public void the_api_user_sends_a_delete_request_to_delete_created_category() throws Exception {
+        response = apiClient.deleteCategory(token, createdCategoryId);
+    }
+
     @When("the API user sends an unauthenticated GET request to {string}")
     public void the_api_user_sends_an_unauthenticated_get_request_to(String endpoint) throws Exception {
         response = apiClient.getCategoriesUnauthenticated(endpoint);
@@ -67,12 +88,14 @@ public class APICategoriesSteps {
     public void the_api_response_should_confirm_the_category_was_created() {
         Assert.assertNotNull(response.jsonPath().get("id"), "Created category response should contain an ID!");
         Assert.assertEquals(response.jsonPath().getString("name"), generatedCategoryName, "Created category name mismatch!");
+        createdCategoryId = response.jsonPath().getInt("id");
     }
 
     @Then("the API response should confirm the sub-category was created")
     public void the_api_response_should_confirm_the_sub_category_was_created() {
         Assert.assertNotNull(response.jsonPath().get("id"), "Created sub-category response should contain an ID!");
         Assert.assertEquals(response.jsonPath().getString("name"), generatedCategoryName, "Created sub-category name mismatch!");
+        createdCategoryId = response.jsonPath().getInt("id");
     }
 
     @Then("the API response should contain mainCategories and subCategories counts")

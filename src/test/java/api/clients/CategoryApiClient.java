@@ -72,6 +72,33 @@ public class CategoryApiClient {
     }
 
     /**
+     * Sends an authorized PUT request to update a category.
+     */
+    public Response updateCategory(String token, int id, String name, Integer parentId) {
+        JSONObject payload = new JSONObject().put("name", name);
+        if (parentId != null) {
+            payload.put("parent", new JSONObject().put("id", parentId));
+        }
+
+        return RestAssured.given()
+                .baseUri(BASE_URL)
+                .header("Authorization", "Bearer " + token)
+                .contentType(ContentType.JSON)
+                .body(payload.toString())
+                .put("/api/categories/" + id);
+    }
+
+    /**
+     * Sends an authorized DELETE request to delete a category.
+     */
+    public Response deleteCategory(String token, int id) {
+        return RestAssured.given()
+                .baseUri(BASE_URL)
+                .header("Authorization", "Bearer " + token)
+                .delete("/api/categories/" + id);
+    }
+
+    /**
      * Sends an unauthenticated GET request.
      */
     public Response getCategoriesUnauthenticated(String endpoint) {

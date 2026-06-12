@@ -63,9 +63,8 @@ Feature: Category Management UI
     Given the user navigates to the Add Category page
     Then the parent category dropdown should contain "Roses"
 
-  @UI-CAT-10 @ui @user @category
-  Scenario: Verify Test User cannot see Add Category or Edit/Delete buttons
-    Given the user has logged in
-    And he navigates to the Categories page
-    Then the Add Category button should not be visible
-    And the Edit and Delete actions should be disabled or hidden
+  @UI-CAT-10 @ui @admin @category @validation @defect
+  Scenario: Verify Admin sees only single validation error for empty category name
+    Given the user navigates to the Add Category page
+    When clicks the Save button on the Add Category form
+    Then only a validation error message "Category name is required" should be displayed for the name field

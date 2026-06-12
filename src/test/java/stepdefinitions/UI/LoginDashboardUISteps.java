@@ -118,4 +118,29 @@ public class LoginDashboardUISteps {
                         + "Categories active: " + categoriesSidebarActive
                         + ", Plants active: " + plantsSidebarActive);
     }
+
+    @When("the user navigates to the Categories page for authorization check")
+    public void the_user_navigates_to_the_categories_page_for_authorization_check() {
+        Hooks.page.navigate(baseUrl + "/ui/categories");
+    }
+
+    @Then("the Add Category button should not be visible on Categories page")
+    public void the_add_category_button_should_not_be_visible_on_categories_page() {
+        int addBtnCount = Hooks.page.locator("a:has-text('Add A Category'), a:has-text('Add Category')").count();
+        Assert.assertEquals(addBtnCount, 0, "Add Category button is visible for non-admin!");
+    }
+
+    @Then("the Edit and Delete actions should be hidden or disabled on Categories page")
+    public void the_edit_and_delete_actions_should_be_hidden_or_disabled_on_categories_page() {
+        int editCount = Hooks.page.locator("a:has-text('Edit')").count();
+        int deleteCount = Hooks.page.locator("a:has-text('Delete')").count();
+        
+        int editDisabledCount = Hooks.page.locator("a.disabled:has-text('Edit'), a[disabled='disabled']:has-text('Edit')").count();
+        int deleteDisabledCount = Hooks.page.locator("a.disabled:has-text('Delete'), a[disabled='disabled']:has-text('Delete')").count();
+        
+        boolean editOk = (editCount == 0) || (editDisabledCount == editCount);
+        boolean deleteOk = (deleteCount == 0) || (deleteDisabledCount == deleteCount);
+        
+        Assert.assertTrue(editOk && deleteOk, "Edit/Delete actions are neither hidden nor disabled on Categories page!");
+    }
 }
