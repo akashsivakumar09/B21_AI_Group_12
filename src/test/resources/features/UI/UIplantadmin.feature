@@ -36,9 +36,9 @@ Feature: Plant Management UI for Admin
   @UI-PLANTS-A-06 @ui @admin @plant @delete
     Scenario: Verify Admin can delete a plant
       # Assuming the Background already navigated to the plant page
-      Given Plant "Rose" records exist in the system
-      When the user clicks the delete icon for plant "Rose" and confirms the deletion
-      Then the Plant table should not contain "Rose"
+      Given Plant "Jasmine" records exist in the system
+      When the user clicks the delete icon for plant "Jasmine" and confirms the deletion
+      Then the Plant table should not contain "Jasmine"
 
   @UI-PLANTS-A-07 @ui @admin @plant @update
     Scenario: Verify Update Plant Category via UI

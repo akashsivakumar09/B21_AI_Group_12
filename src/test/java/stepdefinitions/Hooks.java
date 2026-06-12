@@ -17,7 +17,7 @@ public class Hooks {
     public static void startBrowser() {
         playwright = Playwright.create();
         BrowserType.LaunchOptions options = new BrowserType.LaunchOptions()
-                .setHeadless(true);
+                .setHeadless(false);
         browser = playwright.chromium().launch(options);
         // --- FIREFOX ---
         //browser = playwright.firefox().launch(options);
