@@ -63,3 +63,39 @@ Feature: Category Management API
     Given the API user has authenticated as "admin"
     When the API user sends a POST request to "/api/categories" with name "Roses"
     Then the API response status code should be 400
+
+  @API-CAT-11 @api @category @defect
+  Scenario: Verify attempting to create a sub-category with nonexistent parent ID is rejected
+    Given the API user has authenticated as "admin"
+    When the API user sends a POST request to "/api/categories" with name "SubFake" and nonexistent parent category ID 99999
+    Then the API response status code should be 400
+
+  @API-CAT-12 @api @category @defect
+  Scenario: Verify attempting to update a category with a duplicate name is rejected
+    Given the API user has authenticated as "admin"
+    When the API user sends a POST request to "/api/categories" with name "UD[timestamp]"
+    Then the API response status code should be 201
+    And the API response should confirm the category was created
+    When the API user sends a PUT request to update the created category name to "Roses"
+    Then the API response status code should be 400
+
+  @API-CAT-13 @api @category @defect
+  Scenario: Verify attempting to update a category with an invalid name length is rejected
+    Given the API user has authenticated as "admin"
+    When the API user sends a POST request to "/api/categories" with name "VN[timestamp]"
+    Then the API response status code should be 201
+    And the API response should confirm the category was created
+    When the API user sends a PUT request to update the created category name to "Ab"
+    Then the API response status code should be 400
+
+  @API-CAT-14 @api @category @defect
+  Scenario: Verify attempting to delete a main category with subcategories returns client error
+    Given the API user has authenticated as "admin"
+    When the API user sends a POST request to "/api/categories" with name "DM[timestamp]"
+    Then the API response status code should be 201
+    And the API response should confirm the category was created
+    When the API user sends a POST request to create a sub-category under the created category
+    Then the API response status code should be 201
+    When the API user sends a DELETE request to delete the created category
+    Then the API response status code should be 400
+
