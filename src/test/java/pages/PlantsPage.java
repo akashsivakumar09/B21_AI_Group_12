@@ -70,7 +70,8 @@ public class PlantsPage {
         // Extract all text from the <option> tags inside the dropdown
         //page.pause();
         List<String> availableCategories = categoryDropdown.locator("option").allInnerTexts();
-        return availableCategories.contains(categoryName);
+        return availableCategories.stream()
+                .anyMatch(category -> category.trim().equals(categoryName.trim()));
     }
 
     public void clickNameColumnHeader() {

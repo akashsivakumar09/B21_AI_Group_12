@@ -13,10 +13,10 @@ Feature: Plant Management UI for User
 
   @UI-PLANTS-U-02 @ui @user @filter @plant
   Scenario: Verify User can filter Plants by category
-    Given category "Best" exists in the system
-    When user selects category "Best" from the category dropdown
+    Given category "Good" exists in the system
+    When user selects category "Good" from the category dropdown
     And clicks the Search button
-    Then all displayed plants should belong to category "Best"
+    Then all displayed plants should belong to category "Good"
 
   @UI-PLANTS-U-03 @ui @user @plant @sort
   Scenario: Verify Name column sorting toggles between ascending and descending
