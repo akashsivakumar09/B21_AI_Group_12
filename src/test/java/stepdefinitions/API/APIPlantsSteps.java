@@ -1,55 +1,156 @@
 package stepdefinitions.API;
-import client.PlantApiClient;
+
+import api.clients.PlantApiClient;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import io.restassured.response.Response;
+
+// Static imports make your assertions much cleaner
 import static org.hamcrest.Matchers.*;
-import client.PlantApiClient;
 
 public class APIPlantsSteps {
 
-    // Initialize the client
-    private PlantApiClient plantClient = new PlantApiClient("http://localhost:8080");
+    // ==========================================
+    // CLASS STATE & INITIALIZATION
+    // ==========================================
+    private final PlantApiClient plantClient = new PlantApiClient("http://localhost:8080");
     private Response latestResponse;
-    private int targetPlantId;
 
+    // Unified context variables for the current scenario
+    private int contextPlantId;
+    private int contextCategoryId;
+    private String requestPayload;
+    private String expectedPlantName;
+
+    // ==========================================
+    // AUTHENTICATION STEPS
+    // ==========================================
     @Given("the user has logged in with valid credentials")
     public void userHasLoggedInWithValidCredentials() {
-        // The client handles the payload and token extraction automatically
-        latestResponse = plantClient.login("testuser", "test123");
-        latestResponse.then().statusCode(200);
+        authenticate("testuser", "test123");
+    }
+
+    @Given("the admin has logged in with valid credentials")
+    public void adminHasLoggedInWithValidCredentials() {
+        authenticate("admin", "admin123");
     }
 
     @Given("the user has a valid authorization token")
-    public void userHasAValidAuthorizationToken() {
-        // Handled entirely by the client during the login step
+    @Given("the admin has a valid authorization token")
+    public void hasAValidAuthorizationToken() {
         if (plantClient.getAuthToken() == null) {
-            throw new IllegalStateException("Token is missing!");
+            throw new IllegalStateException("Token is missing! Authentication step may have failed or was skipped.");
         }
     }
 
+    @Given("authorization information is not given in the header")
+    public void authorizationInformationIsNotGivenInTheHeader() {
+        plantClient.clearAuthToken();
+    }
+
+    // ==========================================
+    // DATA PREPARATION STEPS (@Given)
+    // ==========================================
     @Given("a valid plant ID exists in the system")
     public void aValidPlantIdExistsInTheSystem() {
-        // Use the client to get all plants and fetch the first ID
         Response allPlants = plantClient.getAllPlants();
         allPlants.then().statusCode(200);
-        java.util.List<Integer> ids = allPlants.jsonPath().getList("id");
-        if (ids == null || ids.isEmpty()) {
-            setupValidCategoryAndPlant();
-            allPlants = plantClient.getAllPlants();
-            allPlants.then().statusCode(200);
-            ids = allPlants.jsonPath().getList("id");
-        }
-        targetPlantId = ids.get(0);
+        contextPlantId = allPlants.jsonPath().getInt("[0].id");
     }
 
+    @Given("an invalid plant ID is prepared")
+    public void anInvalidPlantIdIsPrepared() {
+        contextPlantId = 999999; // Highly unlikely to exist
+    }
+
+    @Given("a valid category ID exists in the system")
+    public void aValidCategoryIdExistsInTheSystem() {
+        contextCategoryId = 2; // Hardcoded for testing; consider querying DB in the future
+    }
+
+    @Given("a non-existent category ID is prepared")
+    public void aNonExistentCategoryIdIsPrepared() {
+        contextCategoryId = 999999;
+    }
+
+    @Given("a valid plant request body is prepared")
+    public void aValidPlantRequestBodyIsPrepared() {
+        requestPayload = buildPlantPayload("Fern", 19.0f, 5, null);
+    }
+
+    @Given("a valid updated plant request body is prepared")
+    public void aValidUpdatedPlantRequestBodyIsPrepared() {
+        requestPayload = buildPlantPayload("Tulip", 35.0f, 20, 2);
+    }
+
+    @Given("a valid new plant request body is prepared")
+    public void aValidNewPlantRequestBodyIsPrepared() {
+        int randomNum = (int)(Math.random() * 9000) + 1000;
+        expectedPlantName = "Monstera " + randomNum;
+        requestPayload = buildPlantPayload(expectedPlantName, 45.0f, 15, 2);
+    }
+
+    @Given("a valid plant ID exists in the system for deletion")
+    public void aValidPlantIdExistsInTheSystemForDeletion() {
+        String dummyPlant = buildPlantPayload("Test Plant", 10.0f, 1, null);
+        Response createResponse = plantClient.createPlant(2, dummyPlant);
+
+        createResponse.then().statusCode(201);
+        contextPlantId = createResponse.jsonPath().getInt("id");
+        System.out.println("Created dummy plant for deletion with ID: " + contextPlantId);
+    }
+
+    // ==========================================
+    // ACTION STEPS (@When)
+    // ==========================================
     @When("the user executes a GET request to {string} using the valid plant ID")
-    public void userExecutesAGetRequestToUsingTheValidPlantId(String endpoint) {
-        // The client abstracts the Rest Assured given/when/then logic away
-        latestResponse = plantClient.getPlantById(targetPlantId);
+    public void executeGetRequestUsingPreparedPlantId(String endpoint) {
+        latestResponse = plantClient.getPlantById(contextPlantId);
     }
 
+    @When("the user executes a GET request to {string} without authorization")
+    public void executeGetRequestWithoutAuthorization(String endpoint) {
+        latestResponse = plantClient.getWithoutAuth(endpoint);
+    }
+
+    @When("the admin executes a GET request to {string} using the non-existent category ID")
+    @When("the admin executes a GET request to {string} using the valid category ID")
+    @When("the user executes a GET request to {string} using the valid category ID")
+    public void executeGetRequestUsingPreparedCategoryId(String endpoint) {
+        latestResponse = plantClient.getPlantsByCategoryId(contextCategoryId);
+    }
+
+    @When("the admin executes a POST request to {string} to create a plant")
+    @When("the user executes a POST request to {string} to create a plant")
+    public void executePostRequestToCreatePlant(String endpoint) {
+        latestResponse = plantClient.createPlant(contextCategoryId, requestPayload);
+    }
+
+    @When("the user executes a GET request to {string} to retrieve all plants")
+    public void executeGetRequestToRetrieveAllPlants(String endpoint) {
+        latestResponse = plantClient.getAllPlants();
+    }
+
+    @When("the user executes a GET request to {string} to retrieve the plant summary")
+    public void executeGetRequestToRetrievePlantSummary(String endpoint) {
+        latestResponse = plantClient.getPlantSummary();
+    }
+
+    @When("the admin executes a PUT request to {string} to update plant details")
+    public void executePutRequestToUpdatePlantDetails(String endpoint) {
+        latestResponse = plantClient.updatePlant(contextPlantId, requestPayload);
+    }
+
+    @When("the admin executes a DELETE request to {string} with the invalid plant ID")
+    @When("the admin executes a DELETE request to {string} with a valid plant ID")
+    public void executeDeleteRequestWithPreparedPlantId(String endpoint) {
+        latestResponse = plantClient.deletePlant(contextPlantId);
+    }
+
+    // ==========================================
+    // ASSERTION STEPS (@Then)
+    // ==========================================
     @Then("the HTTP status code should be {int}")
     public void httpStatusCodeShouldBe(int expectedStatusCode) {
         latestResponse.then().statusCode(expectedStatusCode);
@@ -63,174 +164,60 @@ public class APIPlantsSteps {
                 .body("$", hasKey(field3));
     }
 
-    @Given("authorization information is not given in the header")
-    public void authorizationInformationIsNotGivenInTheHeader() {
-        // Ensure the client has no token stored
-        plantClient.clearAuthToken();
-    }
-
-    @When("the user executes a GET request to {string} without authorization")
-    public void theUserExecutesAGetRequestWithoutAuthorization(String endpoint) {
-        // Use the new client method that explicitly omits the Auth header
-        latestResponse = plantClient.getWithoutAuth(endpoint);
-    }
-
     @Then("the response body should contain a {string} error message")
-    public void theResponseBodyShouldContainAnErrorMessage(String expectedError) {
-        // Validates that the expected error text (e.g., "UNAUTHORIZED") appears somewhere in the response body.
-        // This is a safe assertion if you don't know the exact JSON schema of the error payload.
-        //latestResponse.then().body(org.hamcrest.Matchers.containsString(expectedError));
-
-        /* Note: If your API returns a specific JSON format for errors like {"error": "UNAUTHORIZED"},
-           you can make this more strict by using:
-        */
+    public void responseBodyShouldContainAnErrorMessage(String expectedError) {
         latestResponse.then().body("error", equalTo(expectedError));
     }
 
-    private int targetCategoryId;
-
-    private void setupValidCategoryAndPlant() {
-        // Log in as admin
-        Response loginRes = io.restassured.RestAssured.given()
-                .baseUri("http://localhost:8080")
-                .contentType(io.restassured.http.ContentType.JSON)
-                .body("{\"username\":\"admin\",\"password\":\"admin123\"}")
-                .post("/api/auth/login");
-        
-        String adminToken = loginRes.jsonPath().getString("token");
-        
-        // Ensure main category "Roses" exists (ID 1)
-        int mainCatId = 1;
-        Response mainCatRes = io.restassured.RestAssured.given()
-                .baseUri("http://localhost:8080")
-                .header("Authorization", "Bearer " + adminToken)
-                .contentType(io.restassured.http.ContentType.JSON)
-                .body("{\"name\":\"Roses\"}")
-                .post("/api/categories");
-                
-        if (mainCatRes.statusCode() == 201) {
-            mainCatId = mainCatRes.jsonPath().getInt("id");
-        } else {
-            // Find existing "Roses"
-            Response getCats = io.restassured.RestAssured.given()
-                    .baseUri("http://localhost:8080")
-                    .header("Authorization", "Bearer " + adminToken)
-                    .accept(io.restassured.http.ContentType.JSON)
-                    .get("/api/categories");
-            try {
-                mainCatId = getCats.jsonPath().getInt("find { it.name == 'Roses' }.id");
-            } catch (Exception e) {
-                // Fallback to first available category
-                mainCatId = getCats.jsonPath().getInt("[0].id");
-            }
-        }
-        
-        // Create subcategory "SubRoses" under mainCatId
-        Response subCatRes = io.restassured.RestAssured.given()
-                .baseUri("http://localhost:8080")
-                .header("Authorization", "Bearer " + adminToken)
-                .contentType(io.restassured.http.ContentType.JSON)
-                .body("{\"name\":\"SubRoses\",\"parent\":{\"id\":" + mainCatId + "}}")
-                .post("/api/categories");
-                
-        if (subCatRes.statusCode() == 201) {
-            targetCategoryId = subCatRes.jsonPath().getInt("id");
-        } else {
-            // Find existing "SubRoses"
-            Response getCats = io.restassured.RestAssured.given()
-                    .baseUri("http://localhost:8080")
-                    .header("Authorization", "Bearer " + adminToken)
-                    .accept(io.restassured.http.ContentType.JSON)
-                    .get("/api/categories");
-            try {
-                targetCategoryId = getCats.jsonPath().getInt("find { it.name == 'SubRoses' }.id");
-            } catch (Exception e) {
-                targetCategoryId = mainCatId; // Fallback
-            }
-        }
-        
-        // Check if there are any plants in this subcategory
-        Response plantsInCat = io.restassured.RestAssured.given()
-                .baseUri("http://localhost:8080")
-                .header("Authorization", "Bearer " + adminToken)
-                .get("/api/plants/category/" + targetCategoryId);
-                
-        if (plantsInCat.statusCode() != 200 || plantsInCat.jsonPath().getList("id").isEmpty()) {
-            // Create a plant in this subcategory
-            String plantBody = "{\n" +
-                    "  \"name\": \"Red Rose\",\n" +
-                    "  \"price\": 10.99,\n" +
-                    "  \"quantity\": 50\n" +
-                    "}";
-            
-            io.restassured.RestAssured.given()
-                    .baseUri("http://localhost:8080")
-                    .header("Authorization", "Bearer " + adminToken)
-                    .contentType(io.restassured.http.ContentType.JSON)
-                    .body(plantBody)
-                    .post("/api/plants/category/" + targetCategoryId);
-        }
-    }
-
-    @Given("a valid category ID exists in the system")
-    public void aValidCategoryIdExistsInTheSystem() {
-        setupValidCategoryAndPlant();
-    }
-
-    @When("the user executes a GET request to {string} using the valid category ID")
-    public void theUserExecutesAGetRequestUsingTheValidCategoryId(String endpoint) {
-        // Using our API Client to abstract the HTTP call
-        latestResponse = plantClient.getPlantsByCategoryId(targetCategoryId);
-    }
-
     @Then("the response body should contain a list of plants with {string}, {string}, {string}, and {string}")
-    public void theResponseBodyShouldContainAListOfPlantsWithFields(String field1, String field2, String field3, String field4) {
-        // Assert that the response is an array (list) and check the structure of the first item in the list
-        // Note: Using "[0]" assumes the category has at least one plant.
+    public void responseBodyShouldContainAListOfPlantsWithFields(String field1, String field2, String field3, String field4) {
         latestResponse.then()
-                .body("size()", greaterThan(0)) // Ensure the list is not empty
+                .body("size()", greaterThan(0))
                 .body("[0]", hasKey(field1))
                 .body("[0]", hasKey(field2))
                 .body("[0]", hasKey(field3))
                 .body("[0]", hasKey(field4));
     }
 
-    private String plantRequestBody;
-
-    @Given("a valid plant request body is prepared")
-    public void aValidPlantRequestBodyIsPrepared() {
-        // Construct a valid JSON payload for creating a plant.
-        // *Note: Adjust these fields if your API requires different properties (e.g., description, image URL).*
-        plantRequestBody = "{\n" +
-                "  \"name\": \"Fern\",\n" +
-                "  \"price\": 19.99,\n" +
-                "  \"quantity\": 5\n" +
-                "}";
-    }
-
-    @When("the user executes a POST request to {string} to create a plant")
-    public void theUserExecutesAPOSTRequestToCreateAPlant(String endpoint) {
-        // We pass the dynamically retrieved category ID (from U-03) and the payload to the client
-        latestResponse = plantClient.createPlant(targetCategoryId, plantRequestBody);
-    }
-
-    @When("the user executes a GET request to {string} to retrieve all plants")
-    public void theUserExecutesAGetRequestToRetrieveAllPlants(String endpoint) {
-        // We already created this method in our PlantApiClient earlier!
-        latestResponse = plantClient.getAllPlants();
-    }
-
-    @When("the user executes a GET request to {string} to retrieve the plant summary")
-    public void theUserExecutesAGetRequestToRetrieveThePlantSummary(String endpoint) {
-        // Execute the GET request using our client method
-        latestResponse = plantClient.getPlantSummary();
-    }
-
     @Then("the response body should contain the summary fields {string} and {string}")
-    public void theResponseBodyShouldContainTheSummaryFields(String field1, String field2) {
-        // Validate that the JSON root object contains the expected summary keys
+    public void responseBodyShouldContainTheSummaryFields(String field1, String field2) {
         latestResponse.then()
-                .body("$", org.hamcrest.Matchers.hasKey(field1))
-                .body("$", org.hamcrest.Matchers.hasKey(field2));
+                .body("$", hasKey(field1))
+                .body("$", hasKey(field2));
+    }
+
+    @Then("the response body should contain the updated plant details")
+    public void responseBodyShouldContainTheUpdatedPlantDetails() {
+        latestResponse.then()
+                .body("name", equalTo("Tulip"))
+                .body("price", equalTo(35.0f))
+                .body("quantity", equalTo(20))
+                .body("category.id", equalTo(2));
+    }
+
+    @Then("the response body should contain the created plant details")
+    public void responseBodyShouldContainTheCreatedPlantDetails() {
+        latestResponse.then()
+                .body("name", equalTo(expectedPlantName))
+                .body("price", equalTo(45.0f))
+                .body("quantity", equalTo(15))
+                .body("id", notNullValue());
+    }
+
+    // ==========================================
+    // PRIVATE HELPER METHODS
+    // ==========================================
+    private void authenticate(String username, String password) {
+        latestResponse = plantClient.login(username, password);
+        latestResponse.then().statusCode(200);
+    }
+
+    /**
+     * Helper method to generate JSON payloads cleanly without repeating string concatenations.
+     */
+    private String buildPlantPayload(String name, float price, int quantity, Integer categoryId) {
+        String categoryJson = (categoryId != null) ? ",\n  \"categoryid\": " + categoryId : "";
+        return String.format("{\n  \"name\": \"%s\",\n  \"price\": %s,\n  \"quantity\": %d%s\n}",
+                name, price, quantity, categoryJson);
     }
 }

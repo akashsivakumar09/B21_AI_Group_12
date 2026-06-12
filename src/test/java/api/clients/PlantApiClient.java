@@ -1,4 +1,4 @@
-package client;
+package api.clients;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -124,5 +124,23 @@ public class PlantApiClient {
         return getAuthorizedRequest()
                 .when()
                 .get("/api/plants/summary");
+    }
+
+    public Response updatePlant(int id, String requestBody) {
+        return getAuthorizedRequest()
+                .pathParam("id", id)
+                .body(requestBody)
+                .when()
+                .put("/api/plants/{id}");
+    }
+
+    /**
+     * Deletes a specific plant from the system by its ID.
+     */
+    public Response deletePlant(int id) {
+        return getAuthorizedRequest()
+                .pathParam("id", id)
+                .when()
+                .delete("/api/plants/{id}");
     }
 }

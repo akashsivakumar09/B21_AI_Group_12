@@ -1,4 +1,4 @@
-Feature: Plant Management API
+Feature: Plant Management API for Users
 
   Background:
     Given the user has logged in with valid credentials
@@ -44,3 +44,4 @@ Feature: Plant Management API
       When the user executes a GET request to "/api/plants/summary" to retrieve the plant summary
       Then the HTTP status code should be 200
       And the response body should contain the summary fields "totalPlants" and "lowStockPlants"
+
