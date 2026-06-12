@@ -42,7 +42,6 @@ Feature: Sales Management API
   @TC-API-SALES-006 @api @sales @user
   Scenario: Test User retrieves all sales
     Given the user API token is available
-    And an existing sale record is available for sales API testing
     When the user retrieves all sales through API
     Then the API status code should be 200
     And the sales response should be a list
