@@ -36,6 +36,15 @@ public class SalesApiClient {
                 .get("/api/sales/page");
     }
 
+    public Response getSalesPageWithSort(String sortField) {
+        return authorized()
+                .queryParam("page", 0)
+                .queryParam("size", 5)
+                .queryParam("sort", sortField + ",asc")
+                .when()
+                .get("/api/sales/page");
+    }
+
     public Response getSaleById(int saleId) {
         return authorized()
                 .pathParam("id", saleId)

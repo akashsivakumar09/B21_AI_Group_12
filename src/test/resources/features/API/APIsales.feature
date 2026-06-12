@@ -76,3 +76,9 @@ Feature: Sales Management API
     And an existing sale record is available for sales API testing
     When the user tries to delete the sale through API
     Then the user sale action should be forbidden
+
+  @TC-API-SALES-011 @BUG-SALES-009 @api @sales @admin @sorting @bug
+  Scenario: Invalid or unsupported Sales API sort field returns internal server error
+    Given the admin API token is available
+    When the admin requests paginated sales using invalid sort field "badField"
+    Then the invalid sales sort request should return bad request
