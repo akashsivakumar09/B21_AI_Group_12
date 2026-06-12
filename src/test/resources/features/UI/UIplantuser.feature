@@ -6,10 +6,10 @@ Feature: Plant Management UI for User
 
   @UI-PLANTS-U-01 @ui @user @search @plant
   Scenario: Verify User can search plant by using name
-    Given Plant "Tulip" records exist in the system
-    When types the plant name "Tulip" in the search plant field
+    Given Plant "Croton" records exist in the system
+    When types the plant name "Croton" in the search plant field
     And clicks the Search button
-    Then the Plant table should contain "Tulip"
+    Then the Plant table should contain "Croton"
 
   @UI-PLANTS-U-02 @ui @user @filter @plant
   Scenario: Verify User can filter Plants by category

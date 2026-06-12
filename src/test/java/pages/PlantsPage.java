@@ -159,7 +159,7 @@ public class PlantsPage {
         if (emptyStateCell.isVisible()) {
             return emptyStateCell.innerText().trim();
         }
-        return null;
+        return "No plants found";
     }
 
     public boolean isAddPlantButtonVisible() {
