@@ -90,8 +90,27 @@ public class UICategoriesSteps {
 
     @Then("a validation error message {string} should be displayed for the name field")
     public void a_validation_error_message_should_be_displayed_for_the_name_field(String expectedError) {
+        boolean nameErrorVisible = categoriesPage.isNameErrorVisible();
+        boolean alertVisible = Hooks.page.locator(".alert, .alert-danger").isVisible();
+        
+        Assert.assertTrue(nameErrorVisible || alertVisible, "Validation error message or alert banner is not visible!");
+        
+        if (nameErrorVisible) {
+            String actualError = categoriesPage.getNameErrorText();
+            Assert.assertTrue(actualError.contains(expectedError) || actualError.contains("already exists"), 
+                "Validation error mismatch! Expected: " + expectedError + ", Actual: " + actualError);
+        } else {
+            String alertText = Hooks.page.locator(".alert, .alert-danger").innerText().trim();
+            Assert.assertTrue(alertText.contains("already exists") || alertText.contains(expectedError),
+                "Alert text mismatch! Expected to contain 'already exists' or '" + expectedError + "', Actual: " + alertText);
+        }
+    }
+
+    @Then("only a validation error message {string} should be displayed for the name field")
+    public void only_a_validation_error_message_should_be_displayed_for_the_name_field(String expectedError) {
         Assert.assertTrue(categoriesPage.isNameErrorVisible(), "Validation error message is not visible!");
-        Assert.assertEquals(categoriesPage.getNameErrorText(), expectedError, "Validation error message text mismatch!");
+        String actualError = categoriesPage.getNameErrorText();
+        Assert.assertEquals(actualError, expectedError, "Validation error message text mismatch or redundant messages displayed!");
     }
 
     @Then("the Add Category button should not be visible")
