@@ -2,11 +2,11 @@ package pages;
 
 import com.microsoft.playwright.Page;
 
-public class DashboardPage {
+public class LoginDashboardPage {
     private final Page page;
     private final String baseUrl;
 
-    public DashboardPage(Page page, String baseUrl) {
+    public LoginDashboardPage(Page page, String baseUrl) {
         this.page = page;
         this.baseUrl = baseUrl;
     }

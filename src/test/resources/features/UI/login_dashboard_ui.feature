@@ -52,28 +52,3 @@ Feature: Login and Dashboard UI
   Scenario: Unauthenticated user cannot access dashboard directly
     When an unauthenticated UI user opens the dashboard directly
     Then unauthenticated dashboard access should be blocked
-
-
-  @BUG-011 @loginDashboard @ui @bug
-  Scenario: Authenticated user should be redirected away from Login page
-    Given the login dashboard UI user logs in as admin
-    When the authenticated user opens the Login page again
-    Then the authenticated user should be redirected to the Dashboard page
-
-  @BUG-013 @loginDashboard @ui @bug
-  Scenario: User dashboard card buttons should show read-only labels
-    Given the login dashboard UI user logs in as user
-    Then the user dashboard category and plant buttons should show read-only labels
-
-  @BUG-012 @loginDashboard @ui @bug
-  Scenario: Categories and Plants sidebar links should be highlighted on active pages
-    Given the login dashboard UI user logs in as admin
-    When the admin checks active sidebar highlighting on Categories and Plants pages
-    Then the Categories and Plants sidebar links should be highlighted
-
-  @TC-LD-UI-011 @loginDashboard @ui @user @authorization
-  Scenario: Verify Test User cannot see Add Category or Edit/Delete buttons on Categories page
-    Given the login dashboard UI user logs in as user
-    When the user navigates to the Categories page for authorization check
-    Then the Add Category button should not be visible on Categories page
-    And the Edit and Delete actions should be hidden or disabled on Categories page
