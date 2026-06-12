@@ -45,7 +45,6 @@ Feature: Sales Management UI
   Scenario: Test User cannot see Sell Plant button
     Given the user has logged in to the UI
     And sales records exist for UI testing
-    When the user opens the Sales list page
     Then the Sell Plant button should not be visible to the user
 
   @TC-SALES-UI-008 @ui @sales @user @authorization

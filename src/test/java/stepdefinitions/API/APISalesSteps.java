@@ -161,6 +161,12 @@ public class APISalesSteps {
         latestResponse = salesClient.deleteSale(saleId);
     }
 
+    @When("the admin requests paginated sales using invalid sort field {string}")
+    public void adminRequestsPaginatedSalesUsingInvalidSortField(String sortField) {
+        salesClient.setToken(adminToken);
+        latestResponse = salesClient.getSalesPageWithSort(sortField);
+    }
+
     @Then("the API status code should be {int}")
     public void apiStatusCodeShouldBe(int statusCode) {
         latestResponse.then().statusCode(statusCode);
@@ -206,6 +212,15 @@ public class APISalesSteps {
     @Then("the user sale action should be forbidden")
     public void userSaleActionShouldBeForbidden() {
         assertThat("ROLE_USER must not be allowed to create or delete sales", latestResponse.statusCode(), equalTo(403));
+    }
+
+    @Then("the invalid sales sort request should return bad request")
+    public void invalidSalesSortRequestShouldReturnBadRequest() {
+        assertEquals(
+                latestResponse.statusCode(),
+                400,
+                "BUG-SALES-009: Invalid sort field should return 400 Bad Request, but actual response was "
+                        + latestResponse.statusCode() + " with body: " + latestResponse.asString());
     }
 
     private void ensureAdminToken() {

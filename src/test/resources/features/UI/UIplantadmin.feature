@@ -42,10 +42,10 @@ Feature: Plant Management UI for Admin
 
   @UI-PLANTS-A-07 @ui @admin @plant @update
     Scenario: Verify Update Plant Category via UI
-      Given Plant "Anthurium" records exist in the system
-      When the user clicks the Edit button for plant "Anthurium"
+      Given Plant "Croton" records exist in the system
+      When the user clicks the Edit button for plant "Croton"
       And updates the Category to "SubRoses"
       And clicks the Save button on the Edit Plant form
       Then the system should redirect to the Plant list page
-      And the Plant table should display "Anthurium" with the category "SubRoses"
+      And the Plant table should display "Croton" with the category "SubRoses"
 
